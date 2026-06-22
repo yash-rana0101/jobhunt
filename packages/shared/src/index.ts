@@ -39,12 +39,24 @@ export enum JobSource {
 }
 
 export enum ApplicationStatus {
-  Saved = "saved",
-  Applied = "applied",
-  Interviewing = "interviewing",
-  Offer = "offer",
-  Rejected = "rejected",
-  Withdrawn = "withdrawn",
+  DISCOVERED = "DISCOVERED",
+  SHORTLISTED = "SHORTLISTED",
+  READY_TO_APPLY = "READY_TO_APPLY",
+  APPLIED = "APPLIED",
+  OUTREACH_SENT = "OUTREACH_SENT",
+  REPLIED = "REPLIED",
+  PHONE_SCREEN = "PHONE_SCREEN",
+  TECHNICAL_ROUND = "TECHNICAL_ROUND",
+  SYSTEM_DESIGN = "SYSTEM_DESIGN",
+  TAKE_HOME = "TAKE_HOME",
+  MANAGER_ROUND = "MANAGER_ROUND",
+  FINAL_ROUND = "FINAL_ROUND",
+  OFFER_RECEIVED = "OFFER_RECEIVED",
+  OFFER_ACCEPTED = "OFFER_ACCEPTED",
+  OFFER_DECLINED = "OFFER_DECLINED",
+  REJECTED = "REJECTED",
+  WITHDRAWN = "WITHDRAWN",
+  ARCHIVED = "ARCHIVED",
 }
 
 export enum OutreachChannel {
