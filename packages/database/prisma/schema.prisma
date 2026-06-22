@@ -68,6 +68,7 @@ model Candidate {
   embeddings              CandidateEmbedding[]
   matches                 JobMatch[]
   referralTargets         ReferralTarget[]
+  outreachDrafts          OutreachDraft[]
 
   @@index([email])
   @@index([fullName])
@@ -232,6 +233,7 @@ model Job {
   match                     JobMatch?
   referralTargets           ReferralTarget[]
   discoveryRuns             ContactDiscoveryRun[]
+  outreachDrafts            OutreachDraft[]
 
   @@index([company])
   @@index([title])
@@ -455,6 +457,7 @@ model CompanyContact {
   discoveryRunId  String?            @map("discovery_run_id")
   discoveryRun    ContactDiscoveryRun? @relation(fields: [discoveryRunId], references: [id], onDelete: SetNull)
   referrals       ReferralTarget[]
+  outreachDrafts  OutreachDraft[]
 
   @@index([companyId])
   @@index([departmentId])
@@ -506,6 +509,94 @@ model ContactDiscoveryRun {
 
   @@index([companyId])
   @@index([jobId])
+}
+
+model OutreachTemplate {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  description     String?
+  type            String   // REFERRAL_REQUEST, HIRING_MANAGER_EMAIL, RECRUITER_EMAIL, etc.
+  subjectTemplate String?  @map("subject_template")
+  bodyTemplate    String   @map("body_template")
+  isSystem        Boolean  @default(true) @map("is_system")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@index([type])
+}
+
+model OutreachGenerationRun {
+  id                    String          @id @default(uuid())
+  jobId                 String?         @map("job_id")
+  status                String          @default("RUNNING") // RUNNING, COMPLETED, FAILED
+  draftsGenerated       Int             @default(0) @map("drafts_generated")
+  averageQualityScore   Float           @default(0.0) @map("average_quality_score")
+  expectedResponseRates Float           @default(0.0) @map("expected_response_rates")
+  reviewRequiredCount   Int             @default(0) @map("review_required_count")
+  errors                String?
+  duration              Int             @default(0) // processing time in ms
+  createdAt             DateTime        @default(now()) @map("created_at")
+  updatedAt             DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  drafts                OutreachDraft[]
+
+  @@index([status])
+}
+
+model OutreachDraft {
+  id                            String                 @id @default(uuid())
+  jobId                         String                 @map("job_id")
+  contactId                     String?                @map("contact_id")
+  candidateId                   String                 @map("candidate_id")
+  runId                         String?                @map("run_id")
+  type                          String                 // REFERRAL_REQUEST, HIRING_MANAGER_EMAIL, RECRUITER_EMAIL, FOUNDER_EMAIL, CTO_EMAIL, ENGINEERING_MANAGER_EMAIL, THANK_YOU_MESSAGE, FOLLOW_UP_MESSAGE, LINKEDIN_DM
+  status                        String                 @default("REVIEW_REQUIRED") // READY, REVIEW_REQUIRED, APPROVED, REJECTED
+  subjectLines                  String[]               @map("subject_lines")
+  selectedSubject               String?                @map("selected_subject")
+  body                          String
+  day3FollowUp                  String?                @map("day3_follow_up")
+  day7FollowUp                  String?                @map("day7_follow_up")
+  day14FollowUp                 String?                @map("day14_follow_up")
+  qualityScore                  Int                    @map("quality_score")
+  personalizationScore          Int                    @map("personalization_score")
+  relevanceScore                Int                    @map("relevance_score")
+  spamRiskScore                 Int                    @map("spam_risk_score")
+  professionalismScore          Int                    @map("professionalism_score")
+  clarityScore                  Int                    @map("clarity_score")
+  expectedResponseProbability   Float                  @map("expected_response_probability")
+  bestContactMessage            String?                @map("best_contact_message")
+  bestOutreachType              String?                @map("best_outreach_type")
+  outreachRecommendationReason   String?                @map("outreach_recommendation_reason")
+  createdAt                     DateTime               @default(now()) @map("created_at")
+  updatedAt                     DateTime               @updatedAt @map("updated_at")
+
+  // Relations
+  job                           Job                    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  contact                       CompanyContact?        @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  candidate                     Candidate              @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  run                           OutreachGenerationRun? @relation(fields: [runId], references: [id], onDelete: SetNull)
+  feedback                      OutreachFeedback[]
+
+  @@index([jobId])
+  @@index([contactId])
+  @@index([candidateId])
+  @@index([runId])
+  @@index([status])
+}
+
+model OutreachFeedback {
+  id        String        @id @default(uuid())
+  draftId   String        @map("draft_id")
+  rating    Int
+  comments  String?
+  processed Boolean       @default(false)
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  draft     OutreachDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId])
 }
 
 
