@@ -1,0 +1,27 @@
+{
+  "name": "@job-hunter/communication-agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/index.ts",
+    "lint": "eslint src tests",
+    "test": "node --env-file=../../.env ../../node_modules/vitest/vitest.mjs run --config vitest.config.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@job-hunter/config": "workspace:*",
+    "@job-hunter/database": "workspace:*",
+    "@job-hunter/logger": "workspace:*",
+    "@job-hunter/shared": "workspace:*",
+    "@job-hunter/application-manager": "workspace:*",
+    "@prisma/client": "^6.2.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "vitest": "^4.1.9"
+  }
+}
