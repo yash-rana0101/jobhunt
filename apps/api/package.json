@@ -21,6 +21,7 @@
     "@job-hunter/contact-finder": "workspace:*",
     "@job-hunter/outreach-agent": "workspace:*",
     "@job-hunter/resume-agent": "workspace:*",
+    "@job-hunter/application-manager": "workspace:*",
     "@prisma/client": "^6.2.1",
     "fastify": "^5.2.1"
   },
