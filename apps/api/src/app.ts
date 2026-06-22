@@ -11,6 +11,7 @@ import { registerMatchRoutes } from "./routes/matches.js";
 import { registerContactRoutes } from "./routes/contacts.js";
 import { registerOutreachRoutes } from "./routes/outreach.js";
 import { registerResumeRoutes } from "./routes/resume.js";
+import { registerApplicationRoutes } from "./modules/application-management/routes.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -43,6 +44,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   registerContactRoutes(app);
   registerOutreachRoutes(app);
   registerResumeRoutes(app);
+  registerApplicationRoutes(app);
 
   return app;
 }

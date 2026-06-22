@@ -14,6 +14,8 @@ const navigationItems = [
   { href: "/jobs", label: "Jobs" },
   { href: "/contacts", label: "Contacts" },
   { href: "/applications", label: "Applications" },
+  { href: "/interviews", label: "Interviews" },
+  { href: "/offers", label: "Offers" },
   { href: "/resume", label: "Resume" },
   { href: "/analytics", label: "Analytics" },
 ] as const;
