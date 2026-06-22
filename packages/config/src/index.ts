@@ -1,6 +1,29 @@
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { config as loadDotenv } from "dotenv";
 
-loadDotenv();
+function findDotenv(): string | undefined {
+  let currentDir = process.cwd();
+  while (true) {
+    const envPath = join(currentDir, ".env");
+    if (existsSync(envPath)) {
+      return envPath;
+    }
+    const parentDir = dirname(currentDir);
+    if (parentDir === currentDir) {
+      break;
+    }
+    currentDir = parentDir;
+  }
+  return undefined;
+}
+
+const envPath = findDotenv();
+if (envPath) {
+  loadDotenv({ path: envPath });
+} else {
+  loadDotenv();
+}
 
 export type RuntimeEnvironment = "development" | "test" | "production";
 
