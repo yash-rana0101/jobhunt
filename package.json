@@ -1,0 +1,37 @@
+{
+  "name": "job-hunter-agent",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "dev": "pnpm build:packages && pnpm --parallel --filter @job-hunter/api --filter @job-hunter/dashboard dev",
+    "build": "pnpm -r build",
+    "build:packages": "pnpm --filter @job-hunter/config --filter @job-hunter/database --filter @job-hunter/logger --filter @job-hunter/shared build",
+    "lint": "pnpm build:packages && pnpm -r lint",
+    "typecheck": "pnpm build:packages && pnpm -r typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,json,md,yml,yaml,css}": [
+      "prettier --write"
+    ],
+    "*.{ts,tsx,js,mjs}": [
+      "eslint"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@next/eslint-plugin-next": "15.5.19",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.4.1",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
+  }
+}
