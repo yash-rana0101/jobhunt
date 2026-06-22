@@ -69,6 +69,8 @@ model Candidate {
   matches                 JobMatch[]
   referralTargets         ReferralTarget[]
   outreachDrafts          OutreachDraft[]
+  resumeVersions          ResumeVersion[]
+  resumeGenerationRuns    ResumeGenerationRun[]
 
   @@index([email])
   @@index([fullName])
@@ -234,6 +236,8 @@ model Job {
   referralTargets           ReferralTarget[]
   discoveryRuns             ContactDiscoveryRun[]
   outreachDrafts            OutreachDraft[]
+  resumeVersions            ResumeVersion[]
+  resumeGenerationRuns      ResumeGenerationRun[]
 
   @@index([company])
   @@index([title])
@@ -597,6 +601,100 @@ model OutreachFeedback {
   draft     OutreachDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
 
   @@index([draftId])
+}
+
+model ResumeVersion {
+  id              String               @id @default(uuid())
+  jobId           String?              @map("job_id")
+  candidateId     String               @map("candidate_id")
+  companyName     String               @map("company_name")
+  roleName        String               @map("role_name")
+  versionName     String               @map("version_name") // GENERAL, STARTUP, BACKEND, FULL_STACK, AI_ENGINEER, FOUNDING_ENGINEER, DEVOPS
+  filePath        String?              @map("file_path")
+  markdownContent String               @map("markdown_content") @db.Text
+  jsonContent     Json?                @map("json_content")
+  atsScore        Float?               @map("ats_score")
+  status          String               @default("PENDING") // PENDING, SUCCESS, FAILED
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  job             Job?                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate       Candidate            @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  optimizations   ResumeOptimization[]
+  scores          ResumeScore[]
+  keywords        ResumeKeyword[]
+
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([versionName])
+}
+
+model ResumeOptimization {
+  id               String        @id @default(uuid())
+  resumeVersionId  String        @map("resume_version_id")
+  resumeVersion    ResumeVersion @relation(fields: [resumeVersionId], references: [id], onDelete: Cascade)
+  originalContent  String        @map("original_content") @db.Text
+  optimizedContent String        @map("optimized_content") @db.Text
+  rulesApplied     String[]      @default([]) @map("rules_applied")
+  improvements     String[]      @default([])
+  createdAt        DateTime      @default(now()) @map("created_at")
+
+  @@index([resumeVersionId])
+}
+
+model ResumeKeyword {
+  id              String        @id @default(uuid())
+  resumeVersionId String        @map("resume_version_id")
+  resumeVersion   ResumeVersion @relation(fields: [resumeVersionId], references: [id], onDelete: Cascade)
+  keyword         String
+  category        String        // PRIMARY, SECONDARY, INDUSTRY, ROLE, TECHNOLOGY
+  status          String        // MATCHED, MISSING, HIGH_IMPACT
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@index([resumeVersionId])
+  @@index([keyword])
+  @@index([category])
+  @@index([status])
+}
+
+model ResumeScore {
+  id                         String        @id @default(uuid())
+  resumeVersionId            String        @map("resume_version_id")
+  resumeVersion              ResumeVersion @relation(fields: [resumeVersionId], references: [id], onDelete: Cascade)
+  overallScore               Float         @map("overall_score")
+  keywordMatchScore          Float         @map("keyword_match_score")
+  roleAlignmentScore         Float         @map("role_alignment_score")
+  skillsMatchScore           Float         @map("skills_match_score")
+  projectMatchScore          Float         @map("project_match_score")
+  formattingScore            Float         @map("formatting_score")
+  readabilityScore           Float         @map("readability_score")
+  missingSkills              String[]      @default([]) @map("missing_skills")
+  missingKeywords            String[]      @default([]) @map("missing_keywords")
+  weakSections               String[]      @default([]) @map("weak_sections")
+  improvementOpportunities   String[]      @default([]) @map("improvement_opportunities")
+  createdAt                  DateTime      @default(now()) @map("created_at")
+
+  @@index([resumeVersionId])
+}
+
+model ResumeGenerationRun {
+  id          String    @id @default(uuid())
+  jobId       String?   @map("job_id")
+  candidateId String    @map("candidate_id")
+  status      String    @default("RUNNING") // RUNNING, COMPLETED, FAILED
+  errors      String?
+  duration    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  job         Job?      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate   Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([candidateId])
+  @@index([status])
 }
 
 
