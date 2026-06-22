@@ -1,27 +1,27 @@
 {
-  "name": "@job-hunter/api",
+  "name": "@job-hunter/job-matcher",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "build": "tsc -p tsconfig.json",
-    "start": "node dist/server.js",
-    "lint": "eslint src",
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/index.ts",
+    "lint": "eslint src tests",
+    "test": "vitest run --config vitest.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fastify/cors": "^10.0.2",
     "@job-hunter/config": "workspace:*",
     "@job-hunter/database": "workspace:*",
     "@job-hunter/logger": "workspace:*",
     "@job-hunter/shared": "workspace:*",
-    "@job-hunter/job-finder": "workspace:*",
-    "@job-hunter/job-matcher": "workspace:*",
     "@prisma/client": "^6.2.1",
-    "fastify": "^5.2.1"
+    "openai": "^6.10.0"
   },
   "devDependencies": {
-    "tsx": "^4.19.2"
+    "tsx": "^4.19.2",
+    "vitest": "^4.1.9"
   }
 }

@@ -66,6 +66,7 @@ model Candidate {
   keywords                CandidateKeyword[]
   roles                   CandidateRole[]
   embeddings              CandidateEmbedding[]
+  matches                 JobMatch[]
 
   @@index([email])
   @@index([fullName])
@@ -227,6 +228,7 @@ model Job {
   technologies              JobTechnology[]     @relation("JobToTechnology")
   tags                      JobTag[]            @relation("JobToTag")
   salary                    JobSalary?
+  match                     JobMatch?
 
   @@index([company])
   @@index([title])
@@ -308,4 +310,69 @@ model JobSearchRun {
   status      String   @default("SUCCESS") // SUCCESS, FAILED, RUNNING
   createdAt   DateTime @default(now()) @map("created_at")
 }
+
+model JobMatch {
+  id                      String              @id @default(uuid())
+  jobId                   String              @unique @map("job_id")
+  candidateId             String              @map("candidate_id")
+  matchScore              Float               @map("match_score")
+  rankingScore            Float               @map("ranking_score")
+  classification          String              @map("classification") // EXCELLENT, GOOD, AVERAGE, POOR
+
+  skillsMatchScore        Float               @map("skills_match_score")
+  experienceMatchScore    Float               @map("experience_match_score")
+  projectMatchScore       Float               @map("project_match_score")
+  roleMatchScore          Float               @map("role_match_score")
+  startupFitScore         Float               @map("startup_fit_score")
+  locationFitScore        Float               @map("location_fit_score")
+  compensationFitScore    Float               @map("compensation_fit_score")
+
+  createdAt               DateTime            @default(now()) @map("created_at")
+  updatedAt               DateTime            @updatedAt @map("updated_at")
+
+  // Relationships
+  job                     Job                 @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidate               Candidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  reasons                 JobMatchReason[]
+  recommendation          JobRecommendation?
+
+  @@index([candidateId])
+  @@index([classification])
+  @@index([matchScore])
+  @@index([rankingScore])
+}
+
+model JobMatchReason {
+  id          String   @id @default(uuid())
+  jobMatchId  String   @map("job_match_id")
+  reason      String
+  isPositive  Boolean  @default(true) @map("is_positive")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relationship
+  jobMatch    JobMatch @relation(fields: [jobMatchId], references: [id], onDelete: Cascade)
+
+  @@index([jobMatchId])
+}
+
+model JobRecommendation {
+  id                        String   @id @default(uuid())
+  jobMatchId                String   @unique @map("job_match_id")
+  whyApply                  String[] @default([]) @map("why_apply")
+  whyNotApply               String[] @default([]) @map("why_not_apply")
+  riskFactors               String[] @default([]) @map("risk_factors")
+  strengths                 String[] @default([]) @map("strengths")
+  weaknesses                String[] @default([]) @map("weaknesses")
+  preparationTips           String[] @default([]) @map("preparation_tips")
+  interviewReadinessScore   Int      @map("interview_readiness_score")
+  missingSkills             String[] @default([]) @map("missing_skills")
+  presentSkills             String[] @default([]) @map("present_skills")
+  improvementRecommendations String[] @default([]) @map("improvement_recommendations")
+  createdAt                 DateTime @default(now()) @map("created_at")
+  updatedAt                 DateTime @updatedAt @map("updated_at")
+
+  // Relationship
+  jobMatch                  JobMatch @relation(fields: [jobMatchId], references: [id], onDelete: Cascade)
+}
+
 
