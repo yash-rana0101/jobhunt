@@ -211,6 +211,9 @@ importers:
       '@job-hunter/logger':
         specifier: workspace:*
         version: link:../../packages/logger
+      '@job-hunter/outreach-agent':
+        specifier: workspace:*
+        version: link:../../agents/outreach-agent
       '@job-hunter/shared':
         specifier: workspace:*
         version: link:../../packages/shared
