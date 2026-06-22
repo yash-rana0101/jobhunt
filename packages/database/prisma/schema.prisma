@@ -72,6 +72,7 @@ model Candidate {
   resumeVersions          ResumeVersion[]
   resumeGenerationRuns    ResumeGenerationRun[]
   applications            Application[]
+  communications          Communication[]
 
   @@index([email])
   @@index([fullName])
@@ -408,6 +409,8 @@ model Company {
   departments         CompanyDepartment[]
   discoveryRuns       ContactDiscoveryRun[]
   applications        Application[]
+  communications      Communication[]
+  communicationThreads CommunicationThread[]
 
   @@index([companyName])
 }
@@ -466,6 +469,9 @@ model CompanyContact {
   referrals       ReferralTarget[]
   outreachDrafts  OutreachDraft[]
   applications    Application[]
+  communications  Communication[]
+  communicationThreads CommunicationThread[]
+  followUpSchedules FollowUpSchedule[]
 
   @@index([companyId])
   @@index([departmentId])
@@ -779,6 +785,9 @@ model Application {
   notes           ApplicationNote[]
   reminders       ApplicationReminder[]
   statusHistory   ApplicationStatusHistory[]
+  communications  Communication[]
+  communicationThreads CommunicationThread[]
+  followUpSchedules FollowUpSchedule[]
 
   @@index([jobId])
   @@index([companyId])
@@ -926,6 +935,214 @@ model ApplicationReminder {
   @@index([dueDate])
   @@index([status])
 }
+
+enum CommunicationType {
+  REFERRAL_REQUEST
+  HIRING_MANAGER_OUTREACH
+  RECRUITER_OUTREACH
+  FOUNDER_OUTREACH
+  CTO_OUTREACH
+  FOLLOW_UP
+  THANK_YOU
+  INTERVIEW_CONFIRMATION
+  INTERVIEW_FOLLOW_UP
+  GENERAL
+}
+
+enum CommunicationStatus {
+  DRAFT
+  APPROVED
+  SCHEDULED
+  SENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  REPLIED
+  FAILED
+  CANCELLED
+}
+
+enum MessageDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum ResponseCategory {
+  POSITIVE
+  INTERESTED
+  REFERRAL_PROVIDED
+  INTERVIEW_REQUEST
+  FOLLOW_UP_REQUEST
+  NOT_INTERESTED
+  REJECTED
+  OUT_OF_OFFICE
+  UNKNOWN
+}
+
+model CommunicationThread {
+  id            String             @id @default(uuid())
+  applicationId String?            @map("application_id")
+  contactId     String?            @map("contact_id")
+  companyId     String?            @map("company_id")
+  subject       String
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  application   Application?       @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  contact       CompanyContact?    @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  company       Company?           @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  messages      CommunicationMessage[]
+  communications Communication[]
+  followUps     FollowUpSchedule[]
+
+  @@index([applicationId])
+  @@index([contactId])
+  @@index([companyId])
+}
+
+model Communication {
+  id              String               @id @default(uuid())
+  threadId        String?              @map("thread_id")
+  applicationId   String?              @map("application_id")
+  contactId       String?              @map("contact_id")
+  companyId       String?              @map("company_id")
+  candidateId     String               @map("candidate_id")
+  type            CommunicationType
+  subject         String
+  status          CommunicationStatus  @default(DRAFT)
+  provider        String               @default("RESEND")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
+
+  // Relations
+  thread          CommunicationThread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  application     Application?         @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  contact         CompanyContact?      @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  company         Company?             @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  candidate       Candidate            @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  recipients      CommunicationRecipient[]
+  deliveries      EmailDelivery[]
+  replies         EmailReply[]
+
+  @@index([threadId])
+  @@index([applicationId])
+  @@index([contactId])
+  @@index([companyId])
+  @@index([candidateId])
+  @@index([status])
+}
+
+model CommunicationRecipient {
+  id              String        @id @default(uuid())
+  communicationId String        @map("communication_id")
+  email           String
+  role            String        @default("TO") // TO, CC, BCC
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  communication   Communication @relation(fields: [communicationId], references: [id], onDelete: Cascade)
+
+  @@index([communicationId])
+}
+
+model CommunicationMessage {
+  id                String             @id @default(uuid())
+  threadId          String             @map("thread_id")
+  subject           String
+  body              String             @db.Text
+  direction         MessageDirection
+  sentAt            DateTime?          @map("sent_at")
+  receivedAt        DateTime?          @map("received_at")
+  providerMessageId String?            @map("provider_message_id")
+  status            String             @default("SENT")
+  createdAt         DateTime           @default(now()) @map("created_at")
+
+  // Relations
+  thread            CommunicationThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId])
+}
+
+model EmailTemplate {
+  id              String        @id @default(uuid())
+  name            String        @unique
+  description     String?
+  category        String
+  subjectTemplate String        @map("subject_template")
+  bodyTemplate    String        @map("body_template") @db.Text
+  variables       String[]      @default([])
+  version         Int           @default(1)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+}
+
+model EmailDelivery {
+  id                String        @id @default(uuid())
+  communicationId   String        @map("communication_id")
+  providerMessageId String?        @map("provider_message_id")
+  status            String        // SENT, DELIVERED, OPENED, CLICKED, BOUNCED, FAILED
+  sentAt            DateTime?     @map("sent_at")
+  deliveredAt       DateTime?     @map("delivered_at")
+  openedAt          DateTime?     @map("opened_at")
+  clickedAt         DateTime?     @map("clicked_at")
+  bouncedAt         DateTime?     @map("bounced_at")
+  failedAt          DateTime?     @map("failed_at")
+  errorMessage      String?       @map("error_message")
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  communication     Communication @relation(fields: [communicationId], references: [id], onDelete: Cascade)
+
+  @@index([communicationId])
+}
+
+model EmailReply {
+  id              String           @id @default(uuid())
+  communicationId String           @map("communication_id")
+  content         String           @db.Text
+  replyTimestamp  DateTime         @map("reply_timestamp")
+  sentiment       String?
+  responseCategory ResponseCategory @default(UNKNOWN) @map("response_category")
+  confidence      Float            @default(1.0)
+  createdAt       DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  communication   Communication    @relation(fields: [communicationId], references: [id], onDelete: Cascade)
+
+  @@index([communicationId])
+}
+
+model FollowUpSchedule {
+  id            String             @id @default(uuid())
+  threadId      String             @map("thread_id")
+  applicationId String?            @map("application_id")
+  contactId     String?            @map("contact_id")
+  sequence      Int
+  scheduledAt   DateTime           @map("scheduled_at")
+  status        String             @default("PENDING") // PENDING, SENT, CANCELLED, SKIPPED
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  thread        CommunicationThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  application   Application?        @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  contact       CompanyContact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([threadId])
+  @@index([applicationId])
+  @@index([contactId])
+}
+
+model CommunicationAnalytics {
+  id          String   @id @default(uuid())
+  metricName  String   @unique @map("metric_name")
+  metricValue Float    @map("metric_value")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+}
+
 
 
 
