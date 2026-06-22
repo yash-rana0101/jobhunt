@@ -67,6 +67,7 @@ model Candidate {
   roles                   CandidateRole[]
   embeddings              CandidateEmbedding[]
   matches                 JobMatch[]
+  referralTargets         ReferralTarget[]
 
   @@index([email])
   @@index([fullName])
@@ -229,6 +230,8 @@ model Job {
   tags                      JobTag[]            @relation("JobToTag")
   salary                    JobSalary?
   match                     JobMatch?
+  referralTargets           ReferralTarget[]
+  discoveryRuns             ContactDiscoveryRun[]
 
   @@index([company])
   @@index([title])
@@ -373,6 +376,136 @@ model JobRecommendation {
 
   // Relationship
   jobMatch                  JobMatch @relation(fields: [jobMatchId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id                  String                @id @default(uuid())
+  companyName         String                @unique @map("company_name")
+  website             String?
+  linkedinUrl         String?               @map("linkedin_url")
+  careersUrl          String?               @map("careers_url")
+  industry            String?
+  companySize         String?               @map("company_size")
+  headquarters        String?
+  fundingStage        String?               @map("funding_stage")
+  description         String?
+  headcount           Int?
+  hiringActivity      String?               @map("hiring_activity")
+  recentGrowthSignals String?               @map("recent_growth_signals")
+  createdAt           DateTime              @default(now()) @map("created_at")
+  updatedAt           DateTime              @updatedAt @map("updated_at")
+
+  // Relations
+  contacts            CompanyContact[]
+  departments         CompanyDepartment[]
+  discoveryRuns       ContactDiscoveryRun[]
+
+  @@index([companyName])
+}
+
+model CompanyDepartment {
+  id          String           @id @default(uuid())
+  companyId   String           @map("company_id")
+  name        String
+  headcount   Int?
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  company     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contacts    CompanyContact[]
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+enum ContactCategory {
+  HIRING_MANAGER
+  ENGINEERING_MANAGER
+  TEAM_LEAD
+  RECRUITER
+  FOUNDER
+  CTO
+  ENGINEER
+  REFERRAL_SOURCE
+  OTHER
+}
+
+model CompanyContact {
+  id              String             @id @default(uuid())
+  companyId       String             @map("company_id")
+  fullName        String             @map("full_name")
+  jobTitle        String             @map("job_title")
+  departmentId    String?            @map("department_id")
+  departmentName  String?            @map("department_name")
+  seniority       String?
+  linkedinUrl     String?            @map("linkedin_url")
+  companyName     String             @map("company_name")
+  source          String
+  confidenceScore Float              @map("confidence_score")
+  contactPriority Float              @map("contact_priority")
+  category        ContactCategory
+  status          String             @default("DISCOVERED")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  company         Company            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  department      CompanyDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  discoveryRunId  String?            @map("discovery_run_id")
+  discoveryRun    ContactDiscoveryRun? @relation(fields: [discoveryRunId], references: [id], onDelete: SetNull)
+  referrals       ReferralTarget[]
+
+  @@index([companyId])
+  @@index([departmentId])
+  @@index([discoveryRunId])
+  @@index([category])
+  @@index([contactPriority])
+}
+
+model ReferralTarget {
+  id          String         @id @default(uuid())
+  contactId   String         @map("contact_id")
+  candidateId String         @map("candidate_id")
+  jobId       String         @map("job_id")
+  ranking     Int
+  type        String         // SAME_TEAM, SAME_DEPARTMENT, TECHNICAL, STARTUP, ALUMNI
+  reason      String?
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  contact     CompanyContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  candidate   Candidate      @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job         Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, candidateId, jobId])
+  @@index([contactId])
+  @@index([candidateId])
+  @@index([jobId])
+}
+
+model ContactDiscoveryRun {
+  id             String           @id @default(uuid())
+  companyId      String?          @map("company_id")
+  jobId          String?          @map("job_id")
+  companyName    String           @map("company_name")
+  status         String           @default("RUNNING") // RUNNING, COMPLETED, FAILED
+  contactsFound  Int              @default(0) @map("contacts_found")
+  contactsRanked Int              @default(0) @map("contacts_ranked")
+  errors         String?
+  duration       Int              @default(0) // processing time in ms
+  successRate    Float            @default(0.0) @map("success_rate")
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  company        Company?         @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  job            Job?             @relation(fields: [jobId], references: [id], onDelete: SetNull)
+  contacts       CompanyContact[]
+
+  @@index([companyId])
+  @@index([jobId])
 }
 
 
