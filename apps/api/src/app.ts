@@ -8,6 +8,7 @@ import { registerCandidateRoutes } from "./routes/candidate.js";
 import { registerHealthRoute } from "./routes/health.js";
 import { registerJobRoutes } from "./routes/jobs.js";
 import { registerMatchRoutes } from "./routes/matches.js";
+import { registerContactRoutes } from "./routes/contacts.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
   const app = Fastify({
@@ -37,6 +38,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   registerHealthRoute(app);
   registerJobRoutes(app);
   registerMatchRoutes(app);
+  registerContactRoutes(app);
 
   return app;
 }

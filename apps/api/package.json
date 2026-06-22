@@ -18,6 +18,7 @@
     "@job-hunter/shared": "workspace:*",
     "@job-hunter/job-finder": "workspace:*",
     "@job-hunter/job-matcher": "workspace:*",
+    "@job-hunter/contact-finder": "workspace:*",
     "@prisma/client": "^6.2.1",
     "fastify": "^5.2.1"
   },
