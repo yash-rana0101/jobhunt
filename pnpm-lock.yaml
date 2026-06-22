@@ -48,6 +48,31 @@ importers:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@22.20.0)(vite@8.0.16(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  agents/contact-finder:
+    dependencies:
+      '@job-hunter/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@job-hunter/database':
+        specifier: workspace:*
+        version: link:../../packages/database
+      '@job-hunter/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
+      '@job-hunter/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@prisma/client':
+        specifier: ^6.2.1
+        version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.22.4
+      vitest:
+        specifier: ^4.1.9
+        version: 4.1.9(@types/node@22.20.0)(vite@8.0.16(@types/node@22.20.0)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
+
   agents/job-finder:
     dependencies:
       '@job-hunter/config':
@@ -143,6 +168,9 @@ importers:
       '@job-hunter/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@job-hunter/contact-finder':
+        specifier: workspace:*
+        version: link:../../agents/contact-finder
       '@job-hunter/database':
         specifier: workspace:*
         version: link:../../packages/database
