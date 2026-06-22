@@ -4,6 +4,7 @@ import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import { createLoggerOptions } from "@job-hunter/logger";
 import type { ApiResponse } from "@job-hunter/shared";
 
+import { registerCandidateRoutes } from "./routes/candidate.js";
 import { registerHealthRoute } from "./routes/health.js";
 
 export async function buildApp(): Promise<FastifyInstance> {
@@ -30,6 +31,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     void reply.status(statusCode).send(response);
   });
 
+  registerCandidateRoutes(app);
   registerHealthRoute(app);
 
   return app;

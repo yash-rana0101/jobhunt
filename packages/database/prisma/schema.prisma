@@ -6,3 +6,185 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum SkillCategory {
+  PROGRAMMING_LANGUAGES
+  BACKEND
+  FRONTEND
+  DATABASES
+  CLOUD
+  DEVOPS
+  AI
+  DATA_ENGINEERING
+  TESTING
+  ARCHITECTURE
+  TOOLS
+}
+
+enum KeywordCategory {
+  SKILL
+  EXPERIENCE
+  PROJECT
+  ROLE
+  DOMAIN
+  TOOL
+}
+
+enum EmbeddingEntityType {
+  RESUME
+  EXPERIENCE
+  PROJECT
+  SKILL
+}
+
+model Candidate {
+  id                      String                @id @default(uuid())
+  fullName                String
+  email                   String?
+  phone                   String?
+  location                String?
+  linkedIn                String?
+  github                  String?
+  portfolio               String?
+  summary                 String?
+  resumeText              String?
+  searchQueries           String[]              @default([])
+  topStrengths            String[]              @default([])
+  uniqueAdvantages        String[]              @default([])
+  competitiveAdvantages   String[]              @default([])
+  startupFitScore         Int                   @default(0)
+  enterpriseFitScore      Int                   @default(0)
+  remoteWorkFitScore      Int                   @default(0)
+  leadershipScore         Int                   @default(0)
+  ownershipScore          Int                   @default(0)
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+  skills                  CandidateSkill[]
+  projects                CandidateProject[]
+  experiences             CandidateExperience[]
+  education               CandidateEducation[]
+  keywords                CandidateKeyword[]
+  roles                   CandidateRole[]
+  embeddings              CandidateEmbedding[]
+
+  @@index([email])
+  @@index([fullName])
+}
+
+model CandidateSkill {
+  id                 String        @id @default(uuid())
+  candidateId        String
+  skillName          String
+  category           SkillCategory
+  confidenceScore    Float
+  yearsOfExperience  Float?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  candidate          Candidate     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([skillName])
+  @@index([category])
+}
+
+model CandidateProject {
+  id              String    @id @default(uuid())
+  candidateId     String
+  projectName     String
+  description     String?
+  techStack       String[]  @default([])
+  projectType     String?
+  role            String?
+  githubLink      String?
+  liveLink        String?
+  businessImpact  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  candidate       Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([projectName])
+}
+
+model CandidateExperience {
+  id                 String    @id @default(uuid())
+  candidateId        String
+  company            String
+  role               String
+  startDate          String?
+  endDate            String?
+  responsibilities   String[]  @default([])
+  technologiesUsed   String[]  @default([])
+  achievements       String[]  @default([])
+  impactMetrics      String[]  @default([])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  candidate          Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([company])
+  @@index([role])
+}
+
+model CandidateEducation {
+  id                    String    @id @default(uuid())
+  candidateId           String
+  degree                String
+  university            String
+  startYear             Int?
+  endYear               Int?
+  relevantCoursework    String[]  @default([])
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  candidate             Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([university])
+}
+
+model CandidateKeyword {
+  id            String          @id @default(uuid())
+  candidateId   String
+  keyword       String
+  category      KeywordCategory
+  weight        Float
+  source        String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  candidate     Candidate       @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([keyword])
+  @@index([category])
+}
+
+model CandidateRole {
+  id                 String    @id @default(uuid())
+  candidateId        String
+  roleName           String
+  confidenceScore    Int
+  searchQueries      String[]  @default([])
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  candidate          Candidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([roleName])
+}
+
+model CandidateEmbedding {
+  id              String              @id @default(uuid())
+  candidateId     String
+  entityType      EmbeddingEntityType
+  entityLabel     String
+  sourceText      String
+  embedding       Float[]
+  provider        String
+  model           String
+  dimensions      Int
+  createdAt       DateTime            @default(now())
+  candidate       Candidate           @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  @@index([candidateId])
+  @@index([entityType])
+}

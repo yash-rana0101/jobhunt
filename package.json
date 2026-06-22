@@ -8,6 +8,7 @@
     "build": "pnpm -r build",
     "build:packages": "pnpm --filter @job-hunter/config --filter @job-hunter/database --filter @job-hunter/logger --filter @job-hunter/shared build",
     "lint": "pnpm build:packages && pnpm -r lint",
+    "test": "pnpm -r --if-present test",
     "typecheck": "pnpm build:packages && pnpm -r typecheck",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml,css}\"",
     "prepare": "husky"
@@ -32,6 +33,7 @@
     "lint-staged": "^15.4.1",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.20.0"
+    "typescript-eslint": "^8.20.0",
+    "vitest": "^4.1.9"
   }
 }
