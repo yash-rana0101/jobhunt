@@ -188,3 +188,124 @@ model CandidateEmbedding {
   @@index([candidateId])
   @@index([entityType])
 }
+
+enum RemoteStatus {
+  REMOTE
+  HYBRID
+  ONSITE
+  UNKNOWN
+}
+
+model Job {
+  id                        String              @id @default(uuid())
+  jobId                     String              @unique @default(uuid()) @map("job_id")
+  title                     String
+  company                   String
+  description               String
+  applicationUrl            String?             @map("application_url")
+  companyUrl                String?             @map("company_url")
+  location                  String?
+  employmentType            String?             @map("employment_type")
+  experienceRequired        String?             @map("experience_required")
+  experienceClassification  String?             @map("experience_classification")
+  salaryMin                 Float?              @map("salary_min")
+  salaryMax                 Float?              @map("salary_max")
+  remoteStatus              RemoteStatus        @default(UNKNOWN) @map("remote_status")
+  postedDate                DateTime?           @map("posted_date")
+  source                    String
+  sourceJobId               String?             @map("source_job_id")
+  crawlTimestamp            DateTime            @default(now()) @map("crawl_timestamp")
+  status                    String              @default("ACTIVE")
+  freshnessScore            Int                 @default(0) @map("freshness_score")
+  createdAt                 DateTime            @default(now()) @map("created_at")
+  updatedAt                 DateTime            @updatedAt @map("updated_at")
+
+  // Relationships
+  jobSourceId               String?             @map("job_source_id")
+  jobSource                 JobSource?          @relation(fields: [jobSourceId], references: [id], onDelete: SetNull)
+  locations                 JobLocation[]
+  technologies              JobTechnology[]     @relation("JobToTechnology")
+  tags                      JobTag[]            @relation("JobToTag")
+  salary                    JobSalary?
+
+  @@index([company])
+  @@index([title])
+  @@index([source])
+  @@index([status])
+  @@index([remoteStatus])
+  @@index([experienceClassification])
+}
+
+model JobSource {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  baseUrl         String?   @map("base_url")
+  lastCrawledAt   DateTime? @map("last_crawled_at")
+  freshnessScore  Float     @default(0) @map("freshness_score")
+  isActive        Boolean   @default(true) @map("is_active")
+  jobs            Job[]
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+}
+
+model JobLocation {
+  id            String       @id @default(uuid())
+  jobId         String       @map("job_id")
+  city          String?
+  state         String?
+  country       String?
+  rawLocation   String       @map("raw_location")
+  remoteStatus  RemoteStatus @default(UNKNOWN) @map("remote_status")
+  job           Job          @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  @@index([jobId])
+}
+
+model JobTechnology {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  jobs      Job[]    @relation("JobToTechnology")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([name])
+}
+
+model JobSalary {
+  id        String   @id @default(uuid())
+  jobId     String   @unique @map("job_id")
+  currency  String   @default("USD")
+  min       Float?
+  max       Float?
+  interval  String   @default("YEAR") // HOURLY, YEAR, MONTH
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+}
+
+model JobTag {
+  id        String   @id @default(uuid())
+  name      String
+  category  String
+  jobs      Job[]    @relation("JobToTag")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([name, category])
+}
+
+model JobSearchRun {
+  id          String   @id @default(uuid())
+  searchQuery String   @map("search_query")
+  source      String
+  jobsFound   Int      @default(0) @map("jobs_found")
+  jobsAdded   Int      @default(0) @map("jobs_added")
+  jobsUpdated Int      @default(0) @map("jobs_updated")
+  errors      String?
+  duration    Int      @default(0)
+  status      String   @default("SUCCESS") // SUCCESS, FAILED, RUNNING
+  createdAt   DateTime @default(now()) @map("created_at")
+}
+
